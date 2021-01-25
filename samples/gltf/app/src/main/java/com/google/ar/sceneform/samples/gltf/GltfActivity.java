@@ -17,6 +17,7 @@ package com.google.ar.sceneform.samples.gltf;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 
+import android.animation.ArgbEvaluator;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.content.Context;
@@ -24,6 +25,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Build.VERSION_CODES;
 import android.os.Bundle;
+import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.ArraySet;
 import android.util.Log;
@@ -46,6 +48,7 @@ import com.google.ar.sceneform.rendering.ViewRenderable;
 import com.google.ar.sceneform.ux.ArFragment;
 import com.google.ar.sceneform.ux.TransformableNode;
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
@@ -87,6 +90,13 @@ public class GltfActivity extends AppCompatActivity {
           new Color(1, 0, 1, 1),
           new Color(1, 1, 1, 1));
   private int nextColor = 0;
+
+  private ViewPager viewPager;
+  private Adapter adapter;
+  private List<Model> models;
+  private Integer[] colors_ = null;
+  private ArgbEvaluator argbEvaluator = new ArgbEvaluator();
+
 
   @Override
   @SuppressWarnings({"AndroidApiChecker", "FutureReturnValueIgnored"})
@@ -191,6 +201,41 @@ public class GltfActivity extends AppCompatActivity {
                 animator.animator.updateBoneMatrices();
               }
             });
+
+    models = new ArrayList<>();
+    models.add(new Model(R.drawable.ic_launcher, "Brochure", ""));
+    models.add(new Model(R.drawable.ic_launcher, "Brochure", ""));
+
+    adapter = new Adapter(models, this);
+    viewPager = findViewById(R.id.viewPager);
+    viewPager.setAdapter(adapter);
+    viewPager.setPadding(130, 0, 130,0);
+
+    Integer[] colors_temp = {
+            getResources().getColor(R.color.cardview_dark_background),
+            getResources().getColor(R.color.cardview_dark_background)
+    };
+    colors_ = colors_temp;
+    viewPager.setOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+        @Override
+        public void onPageScrolled(int i, float v, int i1) {
+            /*if(i < (adapter.getCount() - 1) && i < (colors_.length - 1)){
+                viewPager.setBackgroundColor((Integer) argbEvaluator.evaluate(i1, colors_[i], colors_[i + 1]));
+            } else {
+                viewPager.setBackgroundColor(colors_[colors_.length - 1]);
+            }*/
+        }
+
+        @Override
+        public void onPageSelected(int i) {
+
+        }
+
+        @Override
+        public void onPageScrollStateChanged(int i) {
+
+        }
+    });
   }
 
   /**
