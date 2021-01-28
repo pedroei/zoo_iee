@@ -16,18 +16,18 @@
                 android:id="@+id/image_"
                 android:src="@drawable/ic_launcher"
                 android:layout_width="match_parent"
-                android:layout_height="150dp">
+                android:layout_height="100dp">
             </ImageView>
             <TextView
                 android:id="@+id/title_"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="15dp"
+                android:layout_centerHorizontal="true"
                 android:layout_marginTop="16dp"
                 android:layout_below="@+id/image_"
                 android:textColor="#000000"
-                android:text="Teste"
-                android:textSize="16sp"
+                android:text="animal name"
+                android:textSize="20sp"
                 >
             </TextView>
         </RelativeLayout>

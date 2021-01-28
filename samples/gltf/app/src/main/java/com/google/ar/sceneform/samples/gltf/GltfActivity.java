@@ -141,16 +141,20 @@ public class GltfActivity extends AppCompatActivity {
                               JSONObject attachment = response.getJSONObject(i);
                               JSONObject image_object = attachment.getJSONObject("img");
                               JSONObject image_data_object = image_object.getJSONObject("data");
-                              String img_based_ = "data:image/" +
-                                      image_object.get("contentType") +
-                                      ";base64," + Base64.getEncoder().encodeToString(image_data_object.getJSONArray("data").toString().getBytes());
-                              byte[] decodedString = image_data_object.getJSONArray("data").toString().getBytes(); //Base64.getDecoder().decode(img_based_);
-                              Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
+                              JSONArray jsonArrayOfBytes = image_data_object.getJSONArray(("data"));
+
+                              byte[] bytes = new byte[jsonArrayOfBytes.length()];
+                              for (int j = 0; j < jsonArrayOfBytes.length(); j++) {
+                                  bytes[j]=(byte)(((int)jsonArrayOfBytes.get(j)) & 0xFF);
+                              }
+                              //String encoded = new String(Base64.getEncoder().encode(bytes)); //Bytes to base64
+                              Bitmap decodedByte = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
 
                               String title = attachment.getString("name");
+                              String titleUpperFirstLetter = title.substring(0, 1).toUpperCase() + title.substring(1); // First letter upper case
                               String model_url = attachment.getString("modelUrl");
 
-                              Model model_ = new Model(decodedByte, title, model_url);
+                              Model model_ = new Model(decodedByte, titleUpperFirstLetter, model_url);
                               models.add(model_);
 
                               adapter = new Adapter(models, GltfActivity.this);
