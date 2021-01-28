@@ -21,10 +21,13 @@ import android.animation.ArgbEvaluator;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Build.VERSION_CODES;
 import android.os.Bundle;
+import android.support.annotation.RequiresApi;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.ArraySet;
@@ -32,6 +35,15 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.widget.Toast;
+
+import com.android.volley.AuthFailureError;
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
 import com.google.android.filament.gltfio.Animator;
 import com.google.android.filament.gltfio.FilamentAsset;
 import com.google.ar.core.Anchor;
@@ -47,10 +59,18 @@ import com.google.ar.sceneform.rendering.Renderable;
 import com.google.ar.sceneform.rendering.ViewRenderable;
 import com.google.ar.sceneform.ux.ArFragment;
 import com.google.ar.sceneform.ux.TransformableNode;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Base64;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -93,7 +113,8 @@ public class GltfActivity extends AppCompatActivity {
 
   private ViewPager viewPager;
   private Adapter adapter;
-  private List<Model> models;
+  private List<Model> models = new ArrayList<>();
+  private int models_position_selected = 0;
   private Integer[] colors_ = null;
   private ArgbEvaluator argbEvaluator = new ArgbEvaluator();
 
@@ -104,6 +125,105 @@ public class GltfActivity extends AppCompatActivity {
   // FutureReturnValueIgnored is not valid
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
+      Log.d("teste", "teste");
+      String url_ = "https://ar-api-zoo.herokuapp.com/armodels";
+      RequestQueue requestQueue = Volley.newRequestQueue(this);
+      JsonArrayRequest jsonObjectRequest  = new JsonArrayRequest(
+              Request.Method.GET,
+              url_,
+              null,
+              new Response.Listener<JSONArray>() {
+                  @RequiresApi(api = VERSION_CODES.O)
+                  @Override
+                  public void onResponse(JSONArray response) {
+                      for(int i = 0; i < response.length(); i++){
+                          try {
+                              JSONObject attachment = response.getJSONObject(i);
+                              JSONObject image_object = attachment.getJSONObject("img");
+                              JSONObject image_data_object = image_object.getJSONObject("data");
+                              String img_based_ = "data:image/" +
+                                      image_object.get("contentType") +
+                                      ";base64," + Base64.getEncoder().encodeToString(image_data_object.getJSONArray("data").toString().getBytes());
+                              byte[] decodedString = image_data_object.getJSONArray("data").toString().getBytes(); //Base64.getDecoder().decode(img_based_);
+                              Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
+
+                              String title = attachment.getString("name");
+                              String model_url = attachment.getString("modelUrl");
+
+                              Model model_ = new Model(decodedByte, title, model_url);
+                              models.add(model_);
+
+                              adapter = new Adapter(models, GltfActivity.this);
+                              viewPager = findViewById(R.id.viewPager);
+                              viewPager.setAdapter(adapter);
+                              //viewPager.setPadding(130, 0, 130,0);
+
+                              Integer[] colors_temp = {
+                                      getResources().getColor(R.color.cardview_dark_background),
+                                      getResources().getColor(R.color.cardview_dark_background)
+                              };
+                              colors_ = colors_temp;
+                              viewPager.setOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+                                  @Override
+                                  public void onPageScrolled(int i, float v, int i1) {
+                                    /*if(i < (adapter.getCount() - 1) && i < (colors_.length - 1)){
+                                        viewPager.setBackgroundColor((Integer) argbEvaluator.evaluate(i1, colors_[i], colors_[i + 1]));
+                                    } else {
+                                        viewPager.setBackgroundColor(colors_[colors_.length - 1]);
+                                    }*/
+
+                                  }
+
+                                  @Override
+                                  public void onPageSelected(int i) {
+                                      Log.d("CHANGED::", i + "");
+                                      Log.d("CHANGED::", models.get(i).getDesc());
+                                      Log.d("CHANGED::", models.get(i).getTitle());
+                                      models_position_selected = i;
+                                      WeakReference<GltfActivity> weakActivity = new WeakReference<>(GltfActivity.this);
+                                      ModelRenderable.builder()
+                                              .setSource(GltfActivity.this, Uri.parse(models.get(i).getDesc()))
+                                              .setIsFilamentGltf(true)
+                                              .build()
+                                              .thenAccept(
+                                                      modelRenderable -> {
+                                                          GltfActivity activity = weakActivity.get();
+                                                          if (activity != null) {
+                                                              activity.renderable = modelRenderable;
+                                                          }
+                                                      })
+                                              .exceptionally(
+                                                      throwable -> {
+                                                          Toast toast =
+                                                                  Toast.makeText(GltfActivity.this, "Unable to load Tiger renderable", Toast.LENGTH_LONG);
+                                                          toast.setGravity(Gravity.CENTER, 0, 0);
+                                                          toast.show();
+                                                          return null;
+                                                      });
+                                  }
+
+                                  @Override
+                                  public void onPageScrollStateChanged(int i) {
+
+                                  }
+                              });
+                          } catch (JSONException e) {
+                              e.printStackTrace();
+                              Log.d("JSONException", e.getMessage());
+                          }
+                      }
+
+                    //Log.d("TESTE", response.toString());
+                      //System.out.println(response.toString());
+                  }
+              }, new Response.ErrorListener() {
+                  @Override
+                  public void onErrorResponse(VolleyError error) {
+                      System.out.println("EROORRRRRRRASDSA::" + error);
+                  }
+              }
+      );
+      requestQueue.add(jsonObjectRequest);
 
     if (!checkIsSupportedDeviceOrFinish(this)) {
       return;
@@ -119,7 +239,8 @@ public class GltfActivity extends AppCompatActivity {
             this,
             Uri.parse(
                 //"https://storage.googleapis.com/ar-answers-in-search-models/static/Tiger/model.glb"))
-              "https://storage.googleapis.com/ar-answers-in-search-models/static/aussie_animals/Koala.glb"))
+              //"https://storage.googleapis.com/ar-answers-in-search-models/static/aussie_animals/Koala.glb"))
+            models.size() == 0 ? "https://storage.googleapis.com/ar-answers-in-search-models/static/aussie_animals/Koala.glb" : models.get(models_position_selected).getDesc()))
 
         .setIsFilamentGltf(true)
         .build()
@@ -202,40 +323,6 @@ public class GltfActivity extends AppCompatActivity {
               }
             });
 
-    models = new ArrayList<>();
-    models.add(new Model(R.drawable.ic_launcher, "Brochure", ""));
-    models.add(new Model(R.drawable.ic_launcher, "Brochure", ""));
-
-    adapter = new Adapter(models, this);
-    viewPager = findViewById(R.id.viewPager);
-    viewPager.setAdapter(adapter);
-    viewPager.setPadding(130, 0, 130,0);
-
-    Integer[] colors_temp = {
-            getResources().getColor(R.color.cardview_dark_background),
-            getResources().getColor(R.color.cardview_dark_background)
-    };
-    colors_ = colors_temp;
-    viewPager.setOnPageChangeListener(new ViewPager.OnPageChangeListener() {
-        @Override
-        public void onPageScrolled(int i, float v, int i1) {
-            /*if(i < (adapter.getCount() - 1) && i < (colors_.length - 1)){
-                viewPager.setBackgroundColor((Integer) argbEvaluator.evaluate(i1, colors_[i], colors_[i + 1]));
-            } else {
-                viewPager.setBackgroundColor(colors_[colors_.length - 1]);
-            }*/
-        }
-
-        @Override
-        public void onPageSelected(int i) {
-
-        }
-
-        @Override
-        public void onPageScrollStateChanged(int i) {
-
-        }
-    });
   }
 
   /**

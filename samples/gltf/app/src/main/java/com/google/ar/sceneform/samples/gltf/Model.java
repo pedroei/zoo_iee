@@ -1,21 +1,23 @@
 package com.google.ar.sceneform.samples.gltf;
 
+import android.graphics.Bitmap;
+
 public class Model {
-    private int image;
+    private Bitmap image;
     private String title;
     private String desc;
 
-    public Model(int image, String title, String desc) {
+    public Model(Bitmap image, String title, String desc) {
         this.image = image;
         this.title = title;
         this.desc = desc;
     }
 
-    public int getImage() {
+    public Bitmap getImage() {
         return image;
     }
 
-    public void setImage(int image) {
+    public void setImage(Bitmap image) {
         this.image = image;
     }
 
