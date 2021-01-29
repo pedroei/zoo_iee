@@ -6,30 +6,45 @@
     android:layout_height="match_parent">
     <android.support.v7.widget.CardView
         android:layout_width="match_parent"
-        android:layout_height="200dp"
+        android:layout_height="120dp"
         android:layout_margin="8dp"
         app:cardCornerRadius="20dp">
         <RelativeLayout
             android:layout_width="match_parent"
-            android:layout_height="200dp">
+            android:background="#ffffff"
+            android:layout_height="120dp">
             <ImageView
                 android:id="@+id/image_"
                 android:src="@drawable/ic_launcher"
-                android:layout_width="match_parent"
+                android:layout_width="100dp"
+                android:layout_centerVertical="true"
                 android:layout_height="100dp">
             </ImageView>
-            <TextView
-                android:id="@+id/title_"
+            <RelativeLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_centerHorizontal="true"
-                android:layout_marginTop="16dp"
-                android:layout_below="@+id/image_"
-                android:textColor="#000000"
-                android:text="animal name"
-                android:textSize="20sp"
-                >
-            </TextView>
+                android:layout_centerVertical="true"
+                android:layout_toRightOf="@+id/image_">
+                <TextView
+                    android:id="@+id/title_"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="#555555"
+                    android:text="animal name"
+                    android:textStyle="bold"
+                    android:textSize="28sp">
+                </TextView>
+                <TextView
+                    android:id="@+id/sub_"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="#555555"
+                    android:text="Clique no ecrã para posicionar o modelo"
+                    android:textSize="14sp"
+                    android:layout_below="@+id/title_">
+                </TextView>
+            </RelativeLayout>
+
         </RelativeLayout>
 
     </android.support.v7.widget.CardView>
